@@ -1,0 +1,11 @@
+/**:
+  ros__parameters:
+    input_pointcloud_topic: /livox/lidar
+    filtered_pointcloud_topic: pointcloud/cut
+    output_filtered_pointcloud_topic: pointcloud/cut
+    pose_topic: /mcl_pose
+    scan_frame_id: lidar_link
+    output_frame_id: lidar_link
+    default_laser_height_min: 2.0
+    default_laser_height_max: 50.0
+    regions_config_path: config/tsudanuma_regions.yaml
