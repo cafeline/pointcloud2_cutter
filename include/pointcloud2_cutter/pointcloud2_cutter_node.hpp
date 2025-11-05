@@ -5,11 +5,14 @@
 
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/msg/laser_scan.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
+#include <cstddef>
 #include <mutex>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace pointcloud2_cutter
 {
@@ -22,6 +25,7 @@ public:
 private:
   void handlePose(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
   void handlePointCloud(const sensor_msgs::msg::PointCloud2::SharedPtr msg);
+  void publishLaserScan(const sensor_msgs::msg::PointCloud2 & msg);
 
   std::pair<double, double> currentLaserZ() const;
 
@@ -37,7 +41,18 @@ private:
   rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr pose_sub_;
   rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_sub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr scan_pub_;
+
+  bool publish_scan_{false};
+  double scan_height_min_{};
+  double scan_height_max_{};
+  double scan_angle_min_{};
+  double scan_angle_max_{};
+  double scan_angle_increment_{};
+  double scan_range_min_{};
+  double scan_range_max_{};
+  std::size_t scan_bin_count_{0};
+  std::string scan_frame_id_;
 };
 
 }  // namespace pointcloud2_cutter
-
