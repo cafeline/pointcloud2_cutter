@@ -8,8 +8,8 @@
     output_frame_id: lidar_link
     publish_scan: true
     output_scan_topic: scan
-    scan_height_min: 0.0
-    scan_height_max: 2.0
+    scan_height_min: -0.3
+    scan_height_max: 0.5
     scan_angle_min: -3.141592653589793
     scan_angle_max: 3.141592653589793
     scan_angle_increment: 0.005
