@@ -25,6 +25,7 @@ Region parseRegion(const YAML::Node & node, double default_min, double default_m
   region.y_max = node["y_max"].as<double>();
   const int fallback_priority = -static_cast<int>(index);
   region.priority = node["priority"] ? node["priority"].as<int>() : fallback_priority;
+  region.name = node["name"] ? node["name"].as<std::string>() : ("region_" + std::to_string(index + 1));
 
   if (node["laser_height_min"] && node["laser_height_max"])
   {

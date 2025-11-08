@@ -10,10 +10,12 @@ find_package(ament_index_cpp REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 add_library(pointcloud2_cutter_lib
   src/region_selector.cpp
+  src/region_marker_helper.cpp
   src/pointcloud_filter.cpp
   src/pointcloud2_cutter_node.cpp
 )
@@ -29,6 +31,7 @@ ament_target_dependencies(pointcloud2_cutter_lib
   sensor_msgs
   geometry_msgs
   ament_index_cpp
+  visualization_msgs
 )
 
 target_link_libraries(pointcloud2_cutter_lib yaml-cpp)
@@ -44,6 +47,7 @@ ament_target_dependencies(pointcloud2_cutter_node
   sensor_msgs
   geometry_msgs
   ament_index_cpp
+  visualization_msgs
 )
 
 target_link_libraries(pointcloud2_cutter_node
@@ -59,11 +63,17 @@ install(TARGETS
 install(DIRECTORY include/
   DESTINATION include)
 
-install(DIRECTORY config
-  DESTINATION share/${PROJECT_NAME})
+set(_share_resource_dirs
+  config
+  launch
+)
 
-install(DIRECTORY launch
-  DESTINATION share/${PROJECT_NAME})
+foreach(dir ${_share_resource_dirs})
+  install(DIRECTORY ${dir}
+    DESTINATION share/${PROJECT_NAME})
+  install(DIRECTORY ${dir}
+    DESTINATION ../share/${PROJECT_NAME})
+endforeach()
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
@@ -77,6 +87,9 @@ if(BUILD_TESTING)
   ament_add_gtest(test_pointcloud_filter test/test_pointcloud_filter.cpp)
   target_link_libraries(test_pointcloud_filter pointcloud2_cutter_lib)
   target_compile_definitions(test_pointcloud_filter PRIVATE TEST_RESOURCES_DIR="${TEST_RESOURCES_DIR}")
+
+  ament_add_gtest(test_region_marker_helper test/test_region_marker_helper.cpp)
+  target_link_libraries(test_region_marker_helper pointcloud2_cutter_lib)
 endif()
 
 ament_package()

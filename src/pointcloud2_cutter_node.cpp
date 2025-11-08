@@ -1,4 +1,5 @@
 #include "pointcloud2_cutter/pointcloud2_cutter_node.hpp"
+#include "pointcloud2_cutter/region_marker_helper.hpp"
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
 
@@ -50,6 +51,11 @@ PointCloud2CutterNode::PointCloud2CutterNode()
   const double angle_min_param = declare_parameter<double>("scan_angle_min", -3.14159265358979323846);
   const double angle_max_param = declare_parameter<double>("scan_angle_max", 3.14159265358979323846);
   scan_angle_increment_ = declare_parameter<double>("scan_angle_increment", 0.005);
+  region_marker_frame_id_ = declare_parameter<std::string>("region_marker_frame_id", "map");
+
+  auto region_marker_qos = rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable();
+  region_marker_pub_ = create_publisher<visualization_msgs::msg::MarkerArray>(
+    "region_markers", region_marker_qos);
 
   if (publish_scan_)
   {
@@ -108,6 +114,7 @@ PointCloud2CutterNode::PointCloud2CutterNode()
       }
     }
   }
+  RCLCPP_INFO(get_logger(), "領域マーカーの publish を試みます");
 
   std::string config_path_param = declare_parameter<std::string>("regions_config_path", "");
   if (config_path_param.empty())
@@ -148,6 +155,9 @@ PointCloud2CutterNode::PointCloud2CutterNode()
       RCLCPP_ERROR(get_logger(), "領域設定の読み込みに失敗しました: %s", ex.what());
     }
   }
+
+  publishRegionMarkers();
+  RCLCPP_INFO(get_logger(), "領域マーカーの publish を試みました");
 
   pose_sub_ = create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
     pose_topic, rclcpp::QoS(10),
@@ -218,6 +228,34 @@ void PointCloud2CutterNode::handlePointCloud(const sensor_msgs::msg::PointCloud2
   {
     publishLaserScan(*msg);
   }
+}
+
+void PointCloud2CutterNode::publishRegionMarkers()
+{
+  if (region_markers_published_ || !region_marker_pub_)
+  {
+    return;
+  }
+
+  const auto & regions = region_selector_.regions();
+  if (regions.empty())
+  {
+    return;
+  }
+
+  RegionMarkerConfig marker_config;
+  marker_config.frame_id = region_marker_frame_id_;
+
+  auto markers = create_region_markers(regions, marker_config);
+  const auto stamp = this->now();
+  for (auto & marker : markers.markers)
+  {
+    marker.header.stamp = stamp;
+  }
+
+  region_marker_pub_->publish(markers);
+  region_markers_published_ = true;
+  RCLCPP_INFO(get_logger(), "領域マーカーを %zu 件 publish しました", markers.markers.size());
 }
 
 void PointCloud2CutterNode::publishLaserScan(const sensor_msgs::msg::PointCloud2 & msg)

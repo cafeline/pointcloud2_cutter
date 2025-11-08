@@ -17,6 +17,7 @@ struct Region
   double laser_z_min{};
   double laser_z_max{};
   int priority{};
+  std::string name;
 
   bool contains(double x, double y) const noexcept
   {
