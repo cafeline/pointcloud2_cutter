@@ -40,6 +40,13 @@ PointCloud2CutterNode::PointCloud2CutterNode()
   const auto filtered_topic = declare_parameter<std::string>("filtered_pointcloud_topic", "pointcloud/cut");
   const auto output_topic = declare_parameter<std::string>("output_filtered_pointcloud_topic", filtered_topic);
   const auto pose_topic = declare_parameter<std::string>("pose_topic", "/mcl_pose");
+  int64_t max_filtered_points_param = declare_parameter<int64_t>("max_filtered_points", 0);
+  if (max_filtered_points_param < 0)
+  {
+    RCLCPP_WARN(get_logger(), "max_filtered_points は0以上である必要があります (入力値: %ld)", max_filtered_points_param);
+    max_filtered_points_param = 0;
+  }
+  max_filtered_points_ = static_cast<std::size_t>(max_filtered_points_param);
   scan_frame_id_ = declare_parameter<std::string>("scan_frame_id", "lidar_link");
   output_frame_id_ = declare_parameter<std::string>("output_frame_id", scan_frame_id_);
   publish_scan_ = declare_parameter<bool>("publish_scan", true);
@@ -218,6 +225,11 @@ void PointCloud2CutterNode::handlePointCloud(const sensor_msgs::msg::PointCloud2
 
   const auto [z_min, z_max] = currentLaserZ();
   auto filtered = PointCloudFilter::filterByHeight(*msg, z_min, z_max, output_frame_id_);
+
+  if (filtered && max_filtered_points_ > 0)
+  {
+    filtered = PointCloudFilter::limitPointCount(filtered, max_filtered_points_);
+  }
 
   if (cloud_pub_ && filtered && filtered->width > 0)
   {

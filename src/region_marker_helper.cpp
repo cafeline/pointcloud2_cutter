@@ -83,7 +83,7 @@ visualization_msgs::msg::Marker create_label_marker(
   marker.type = visualization_msgs::msg::Marker::TEXT_VIEW_FACING;
   marker.action = visualization_msgs::msg::Marker::ADD;
 
-  const double label_scale_factor = 10.6;
+  const double label_scale_factor = 2.6;
   const double label_offset_factor = 0.5;
 
   marker.pose.position.x = (region.x_min + region.x_max) * 0.5;

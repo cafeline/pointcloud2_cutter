@@ -6,5 +6,12 @@
         x_max: 90.0
         y_min: -70.0
         y_max: -35.0
-        laser_height_min: 0.0
+        laser_height_min: 0.6
         laser_height_max: 2.0
+      - name: "[2]"
+        x_min: -10.0
+        x_max: 20.0
+        y_min: -70.0
+        y_max: 0.0
+        laser_height_min: 1.4
+        laser_height_max: 2.5

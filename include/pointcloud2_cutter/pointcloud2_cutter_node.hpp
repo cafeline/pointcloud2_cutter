@@ -58,6 +58,7 @@ private:
   std::string scan_frame_id_;
   std::string region_marker_frame_id_;
   bool region_markers_published_{false};
+  std::size_t max_filtered_points_{0};
 };
 
 }  // namespace pointcloud2_cutter

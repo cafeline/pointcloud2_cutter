@@ -17,4 +17,5 @@
     scan_range_max: 10.0
     default_laser_height_min: 2.0
     default_laser_height_max: 50.0
+    max_filtered_points: 20000
     regions_config_path: config/tsukuba_regions.yaml
