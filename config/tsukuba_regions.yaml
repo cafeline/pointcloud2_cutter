@@ -15,10 +15,10 @@
         y_max: 120.0
         laser_height_min: 1.4
         laser_height_max: 2.5
-      - name: "[2]"
+      - name: "[3]"
         x_min: 250.0
         x_max: 600.0
-        y_min: -115.0
-        y_max: -15.0
+        y_min: -65.0
+        y_max: -45.0
         laser_height_min: 2.0
-        laser_height_max: 5.0
+        laser_height_max: 6.0
