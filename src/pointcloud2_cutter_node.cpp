@@ -225,6 +225,15 @@ void PointCloud2CutterNode::handlePointCloud(const sensor_msgs::msg::PointCloud2
 
   const auto [z_min, z_max] = currentLaserZ();
   auto filtered = PointCloudFilter::filterByHeight(*msg, z_min, z_max, output_frame_id_);
+  auto filtered_for_scan = std::shared_ptr<sensor_msgs::msg::PointCloud2>();
+  const bool can_reuse_for_scan =
+    publish_scan_ &&
+    std::abs(scan_height_min_ - z_min) < 1e-9 &&
+    std::abs(scan_height_max_ - z_max) < 1e-9 &&
+    scan_frame_id_ == output_frame_id_;
+  if (can_reuse_for_scan) {
+    filtered_for_scan = filtered;
+  }
 
   if (filtered && max_filtered_points_ > 0)
   {
@@ -238,7 +247,7 @@ void PointCloud2CutterNode::handlePointCloud(const sensor_msgs::msg::PointCloud2
 
   if (publish_scan_)
   {
-    publishLaserScan(*msg);
+    publishLaserScan(*msg, filtered_for_scan);
   }
 }
 
@@ -270,14 +279,17 @@ void PointCloud2CutterNode::publishRegionMarkers()
   RCLCPP_INFO(get_logger(), "領域マーカーを %zu 件 publish しました", markers.markers.size());
 }
 
-void PointCloud2CutterNode::publishLaserScan(const sensor_msgs::msg::PointCloud2 & msg)
+void PointCloud2CutterNode::publishLaserScan(
+  const sensor_msgs::msg::PointCloud2 & msg,
+  const std::shared_ptr<sensor_msgs::msg::PointCloud2> & prefiltered)
 {
   if (!scan_pub_ || scan_bin_count_ == 0)
   {
     return;
   }
 
-  auto filtered = PointCloudFilter::filterByHeight(msg, scan_height_min_, scan_height_max_, scan_frame_id_);
+  auto filtered = prefiltered ? prefiltered :
+    PointCloudFilter::filterByHeight(msg, scan_height_min_, scan_height_max_, scan_frame_id_);
 
   sensor_msgs::msg::LaserScan scan;
   scan.header = msg.header;

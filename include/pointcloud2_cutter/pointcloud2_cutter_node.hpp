@@ -26,7 +26,9 @@ public:
 private:
   void handlePose(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
   void handlePointCloud(const sensor_msgs::msg::PointCloud2::SharedPtr msg);
-  void publishLaserScan(const sensor_msgs::msg::PointCloud2 & msg);
+  void publishLaserScan(
+    const sensor_msgs::msg::PointCloud2 & msg,
+    const std::shared_ptr<sensor_msgs::msg::PointCloud2> & prefiltered);
   void publishRegionMarkers();
 
   std::pair<double, double> currentLaserZ() const;

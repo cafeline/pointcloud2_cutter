@@ -2,7 +2,6 @@
 
 #include <sensor_msgs/point_cloud2_iterator.hpp>
 
-#include <array>
 #include <vector>
 
 namespace pointcloud2_cutter
@@ -14,29 +13,24 @@ std::shared_ptr<sensor_msgs::msg::PointCloud2> PointCloudFilter::filterByHeight(
   double z_max,
   const std::string & frame_id)
 {
-  std::vector<std::array<float, 3>> kept_points;
-  kept_points.reserve(input.width * input.height);
-
-  sensor_msgs::PointCloud2ConstIterator<float> iter_x(input, "x");
-  sensor_msgs::PointCloud2ConstIterator<float> iter_y(input, "y");
-  sensor_msgs::PointCloud2ConstIterator<float> iter_z(input, "z");
-
-  for (; iter_x != iter_x.end(); ++iter_x, ++iter_y, ++iter_z)
+  std::size_t kept_count = 0;
   {
-    const float z = *iter_z;
-    if (z < z_min || z > z_max)
+    sensor_msgs::PointCloud2ConstIterator<float> iter_z(input, "z");
+    for (; iter_z != iter_z.end(); ++iter_z)
     {
-      continue;
+      const float z = *iter_z;
+      if (z >= z_min && z <= z_max)
+      {
+        ++kept_count;
+      }
     }
-
-    kept_points.push_back({*iter_x, *iter_y, z});
   }
 
   auto output = std::make_shared<sensor_msgs::msg::PointCloud2>();
   output->header = input.header;
   output->header.frame_id = frame_id;
   output->height = 1;
-  output->width = static_cast<uint32_t>(kept_points.size());
+  output->width = static_cast<uint32_t>(kept_count);
   output->is_bigendian = input.is_bigendian;
   output->is_dense = true;
 
@@ -45,18 +39,28 @@ std::shared_ptr<sensor_msgs::msg::PointCloud2> PointCloudFilter::filterByHeight(
     "x", 1, sensor_msgs::msg::PointField::FLOAT32,
     "y", 1, sensor_msgs::msg::PointField::FLOAT32,
     "z", 1, sensor_msgs::msg::PointField::FLOAT32);
-  modifier.resize(kept_points.size());
+  modifier.resize(kept_count);
 
+  sensor_msgs::PointCloud2ConstIterator<float> iter_x(input, "x");
+  sensor_msgs::PointCloud2ConstIterator<float> iter_y(input, "y");
+  sensor_msgs::PointCloud2ConstIterator<float> iter_z(input, "z");
   sensor_msgs::PointCloud2Iterator<float> out_x(*output, "x");
   sensor_msgs::PointCloud2Iterator<float> out_y(*output, "y");
   sensor_msgs::PointCloud2Iterator<float> out_z(*output, "z");
 
-  for (size_t i = 0; i < kept_points.size(); ++i, ++out_x, ++out_y, ++out_z)
+  for (; iter_x != iter_x.end(); ++iter_x, ++iter_y, ++iter_z)
   {
-    const auto & point = kept_points[i];
-    *out_x = point[0];
-    *out_y = point[1];
-    *out_z = point[2];
+    const float z = *iter_z;
+    if (z < z_min || z > z_max)
+    {
+      continue;
+    }
+    *out_x = *iter_x;
+    *out_y = *iter_y;
+    *out_z = z;
+    ++out_x;
+    ++out_y;
+    ++out_z;
   }
 
   return output;
